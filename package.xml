@@ -1,0 +1,39 @@
+<package>
+  <name>orb_slam2</name>
+  <version>1.0.0</version>
+  <description>ORB-SLAM2 is a real-time SLAM library for Monocular, Stereo and RGB-D cameras that computes the camera trajectory and a sparse 3D reconstruction (in the stereo and RGB-D case with true scale). It is able to detect loops and relocalize the camera in real time.</description>
+  <maintainer email="mirokrajicek@gmail.com">Miroslav Krajicek</maintainer>
+
+  <license>GPLv3</license>
+
+  <url type="website">https://github.com/Roboauto/ORB_SLAM2</url>
+  <!-- <url type="bugtracker"></url> -->
+
+  <author email="raulmur@unizar.es">Raul Mur Artal</author>
+  <author email="tardos@unizar.es">Juan Domingo Tardos Solano</author>
+  <author email="josemari@unizar.es">Jose Maria Martinez Montiel</author>
+
+  <!-- Dependencies which this package needs to build itself. -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Dependencies needed to compile this package. -->
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>std_srvs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>dynamic_reconfigure</build_depend>
+  <build_depend>message_generation</build_depend>
+
+  <!-- Dependencies needed after this package is compiled. -->
+  <run_depend>roscpp</run_depend>
+  <run_depend>gazebo5</run_depend>
+  <run_depend>gazebo_ros</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>std_srvs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>dynamic_reconfigure</run_depend>
+  <run_depend>message_runtime</run_depend>
+
+</package>
