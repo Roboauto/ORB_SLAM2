@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
         tf
         tf2
         tf2_ros
+        robo_utils
 )
 
 
@@ -24,10 +25,10 @@ find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 catkin_package(
-        INCLUDE_DIRS include
+        INCLUDE_DIRS include ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o
         LIBRARIES orb_slam2
         CATKIN_DEPENDS roscpp message_runtime
-        DEPENDS system_lib eigen
+        DEPENDS system_lib eigen DBoW2 g2o
 )
 
 include_directories(
@@ -44,6 +45,8 @@ link_directories(
         ${roslib_LIBRARY_DIRS}
         ${catkin_LIBRARY_DIRS}
         ${local_LIBRARY_DIRS}
+        ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib
+        ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib
 )
 
 add_library(orb_slam2
@@ -75,46 +78,4 @@ target_link_libraries(orb_slam2
         g2o
 )
 
-# Build examples
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
-
-add_executable(rgbd_tum
-Examples/RGB-D/rgbd_tum.cc)
-target_link_libraries(rgbd_tum orb_slam2
-        ${catkin_LIBRARIES}
-        ${roscpp_LIBRARIES}
-        ${roslib_LIBRARIES}
-        ${OpenCV_LIBS}
-        ${EIGEN3_LIBS})
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo)
-
-add_executable(stereo_kitti
-Examples/Stereo/stereo_kitti.cc)
-target_link_libraries(stereo_kitti orb_slam2
-        ${catkin_LIBRARIES}
-        ${roscpp_LIBRARIES}
-        ${roslib_LIBRARIES}
-        ${OpenCV_LIBS}
-        ${EIGEN3_LIBS})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Monocular)
-
-add_executable(mono_tum
-Examples/Monocular/mono_tum.cc)
-target_link_libraries(mono_tum  orb_slam2
-        ${catkin_LIBRARIES}
-        ${roscpp_LIBRARIES}
-        ${roslib_LIBRARIES}
-        ${OpenCV_LIBS}
-        ${EIGEN3_LIBS})
-
-add_executable(mono_kitti
-Examples/Monocular/mono_kitti.cc)
-target_link_libraries(mono_kitti
-        orb_slam2
-        ${catkin_LIBRARIES}
-        ${roscpp_LIBRARIES}
-        ${roslib_LIBRARIES}
-        ${OpenCV_LIBS}
-        ${EIGEN3_LIBS})
 

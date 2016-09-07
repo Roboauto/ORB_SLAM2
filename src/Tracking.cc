@@ -42,10 +42,10 @@ using namespace std;
 namespace ORB_SLAM2
 {
 
-Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, Map *pMap, KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor):
+Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, robo_utils::Visualization& viz, robo_utils::Camera::Visualization& camViz, Map *pMap, KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor):
     mState(NO_IMAGES_YET), mSensor(sensor), mbOnlyTracking(false), mbVO(false), mpORBVocabulary(pVoc),
     mpKeyFrameDB(pKFDB), mpInitializer(static_cast<Initializer*>(NULL)), mpSystem(pSys),
-    mpMap(pMap), mnLastRelocFrameId(0)
+    mpMap(pMap), mnLastRelocFrameId(0), visualization_(viz), camVisualization_(camViz)
 {
     // Load camera parameters from settings file
 
@@ -157,11 +157,6 @@ void Tracking::SetLoopClosing(LoopClosing *pLoopClosing)
     mpLoopClosing=pLoopClosing;
 }
 
-void Tracking::SetViewer(Viewer *pViewer)
-{
-}
-
-
 cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRectRight, const double &timestamp)
 {
     mImGray = imRectLeft;
@@ -232,10 +227,62 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
     return mCurrentFrame.mTcw.clone();
 }
 
+    int lowT = 60;
+    int highT = 180;
 
 cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
 {
-    mImGray = im;
+    /*
+cvNamedWindow("cnt",CV_WINDOW_AUTOSIZE);
+cvCreateTrackbar("low","cnt",&lowT,255,0);
+cvCreateTrackbar("high","cnt",&highT,255,0);
+
+
+cv::Mat blue(im.rows,im.cols, CV_8U);
+
+int fromTo[] = {0,0};
+cv::mixChannels(im,blue,fromTo,1);
+
+cv::Mat edges;
+cv::blur(blue,edges, cv::Size(3,3) );
+cv::Canny(edges,edges,lowT,highT);
+
+const cv::Mat element = cv::getStructuringElement(CV_SHAPE_ELLIPSE,cv::Size(13,13));
+
+cv::morphologyEx(edges,edges, CV_MOP_CLOSE, element);
+cv::imshow("edges",edges);
+
+
+cv::Mat temp;
+cv::cvtColor(im, temp, CV_BGR2HSV);
+
+cv::Mat mask;
+cv::inRange(temp, cv::Scalar(0,0,0), cv::Scalar(255, 255, 125),mask);
+
+mImGray = cv::Mat(im.rows,im.cols,im.type(),cv::Scalar(250.0,250.0,250.0));
+
+
+
+im.copyTo(mImGray,mask);
+
+cv::imshow("image",mask);
+
+
+cv::Mat mask(im.rows +2, im.cols +2, CV_8U, cv::Scalar(0));
+
+cv::floodFill(edges, mask, cv::Point(650,2),255,0, cv::Scalar(), cv::Scalar(), 4 + (255 << 8) + cv::FLOODFILL_MASK_ONLY);
+
+cv::Rect myROI(1, 1,im.cols, im.rows);
+
+im.copyTo(mImGray,255 - mask(myROI));
+
+    cv::waitKey(1);
+
+    cv::imshow("myMask",mask);
+      */
+
+    mImGray = im(cv::Rect(0, 0, im.cols, nearbyintf(0.65 * im.rows)));
+
 
     if(mImGray.channels()==3)
     {
@@ -282,6 +329,10 @@ void Tracking::Track()
             MonocularInitialization();
 
         //mpFrameDrawer->Update(this);
+        cv::Mat img;
+        cv::drawKeypoints(mImGray,mCurrentFrame.mvKeys, img,cv::Scalar( 0, 255, 255 ));
+        cv::imshow("landmarks-notinit",img);
+        cv::waitKey(2);
 
         if(mState!=OK)
             return;
@@ -299,6 +350,8 @@ void Tracking::Track()
 
             if(mState==OK)
             {
+                std::cout <<"OK" << std::endl;
+
                 // Local Mapping might have changed some MapPoints tracked in last frame
                 CheckReplacedInLastFrame();
 
@@ -415,6 +468,12 @@ void Tracking::Track()
         // Update drawer
         //mpFrameDrawer->Update(this);
 
+        cv::Mat img;
+        cv::drawKeypoints(mImGray,mCurrentFrame.mvKeys, img,cv::Scalar( 0, 255, 255 ));
+        cv::imshow("landmarks",img);
+        cv::waitKey(1);
+
+
         // If tracking were good, check if we insert a keyframe
         if(bOK)
         {
@@ -429,7 +488,12 @@ void Tracking::Track()
             else
                 mVelocity = cv::Mat();
 
-            //mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.mTcw);
+            visualization_.ClearPath();
+            for (KeyFrame* frame : mlpReferences)
+            {
+                DrawPath(frame->GetPose());
+            }
+            std::cout << "DRAWING PATH" << std::endl;
 
             // Clean temporal point matches
             for(int i=0; i<mCurrentFrame.N; i++)
@@ -552,7 +616,7 @@ void Tracking::StereoInitialization()
 
         mpMap->mvpKeyFrameOrigins.push_back(pKFini);
 
-        //mpMapDrawer->SetCurrentCameraPose(mCurrentFrame.mTcw);
+        DrawPath(mCurrentFrame.mTcw);
 
         mState=OK;
     }
@@ -581,12 +645,16 @@ void Tracking::MonocularInitialization()
 
             return;
         }
+
+        std::cout << "!mCurrentFrame.mvKeys.size()>100" << std::endl;
     }
     else
     {
         // Try to initialize
         if((int)mCurrentFrame.mvKeys.size()<=100)
         {
+            std::cout << "keys" << std::endl;
+
             delete mpInitializer;
             mpInitializer = static_cast<Initializer*>(NULL);
             fill(mvIniMatches.begin(),mvIniMatches.end(),-1);
@@ -598,8 +666,10 @@ void Tracking::MonocularInitialization()
         int nmatches = matcher.SearchForInitialization(mInitialFrame,mCurrentFrame,mvbPrevMatched,mvIniMatches,100);
 
         // Check if there are enough correspondences
-        if(nmatches<100)
+        if(nmatches<30)
         {
+            std::cout << "not enough matches: " << nmatches << std::endl;
+
             delete mpInitializer;
             mpInitializer = static_cast<Initializer*>(NULL);
             return;
@@ -628,6 +698,8 @@ void Tracking::MonocularInitialization()
             mCurrentFrame.SetPose(Tcw);
 
             CreateInitialMapMonocular();
+
+            std::cout << "mono initialized" << std::endl;
         }
     }
 }
@@ -727,7 +799,7 @@ void Tracking::CreateInitialMapMonocular()
 
     mpMap->SetReferenceMapPoints(mvpLocalMapPoints);
 
-    //mpMapDrawer->SetCurrentCameraPose(pKFcur->GetPose());
+    //DrawPath(pKFcur->GetPose());
 
     mpMap->mvpKeyFrameOrigins.push_back(pKFini);
 
@@ -1596,6 +1668,20 @@ void Tracking::InformOnlyTracking(const bool &flag)
     mbOnlyTracking = flag;
 }
 
+    void Tracking::DrawPath(const cv::Mat& mat)
+    {
+        const cv::Mat Rcw = mat.rowRange(0,3).colRange(0,3);
+        const cv::Mat tcw = mat.rowRange(0,3).col(3);
 
+        tf2::Transform transform;
+
+        tf2::Vector3 T(tcw.at<float>(0), tcw.at<float>(1),tcw.at<float>(2));
+        tf2::Matrix3x3 R(Rcw.at<float>(0,0),Rcw.at<float>(0,1),Rcw.at<float>(0,2),
+                         Rcw.at<float>(1,0),Rcw.at<float>(1,1),Rcw.at<float>(1,2),
+                         Rcw.at<float>(2,0),Rcw.at<float>(2,1),Rcw.at<float>(2,2));
+        transform = tf2::Transform(R,T);
+
+        visualization_.DrawPath(transform, ros::Time::now());
+    }
 
 } //namespace ORB_SLAM

@@ -22,16 +22,16 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#include<string>
-#include<thread>
-#include<opencv2/core/core.hpp>
-
-#include "Tracking.h"
-#include "Map.h"
-#include "LocalMapping.h"
-#include "LoopClosing.h"
-#include "KeyFrameDatabase.h"
 #include "ORBVocabulary.h"
+
+#include <robo_utils/Visualization.hh>
+#include <robo_utils/Camera/Visualization.hh>
+
+#include <string>
+#include <thread>
+#include <mutex>
+
+#include<opencv2/core/core.hpp>
 
 namespace ORB_SLAM2
 {
@@ -42,6 +42,7 @@ class Map;
 class Tracking;
 class LocalMapping;
 class LoopClosing;
+class KeyFrameDatabase;
 
 class System
 {
@@ -56,7 +57,8 @@ public:
 public:
 
     // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
-    System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor, const bool bUseViewer = true);
+    System(const std::string &strVocFile, const std::string &strSettingsFile, const eSensor sensor,
+           robo_utils::Visualization& viz, robo_utils::Camera::Visualization& camViz, const bool bUseViewer = true);
 
     // Proccess the given stereo frame. Images must be synchronized and rectified.
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
@@ -90,18 +92,18 @@ public:
     // Save camera trajectory in the TUM RGB-D dataset format.
     // Call first Shutdown()
     // See format details at: http://vision.in.tum.de/data/datasets/rgbd-dataset
-    void SaveTrajectoryTUM(const string &filename);
+    void SaveTrajectoryTUM(const std::string &filename);
 
     // Save keyframe poses in the TUM RGB-D dataset format.
     // Use this function in the monocular case.
     // Call first Shutdown()
     // See format details at: http://vision.in.tum.de/data/datasets/rgbd-dataset
-    void SaveKeyFrameTrajectoryTUM(const string &filename);
+    void SaveKeyFrameTrajectoryTUM(const std::string &filename);
 
     // Save camera trajectory in the KITTI dataset format.
     // Call first Shutdown()
     // See format details at: http://www.cvlibs.net/datasets/kitti/eval_odometry.php
-    void SaveTrajectoryKITTI(const string &filename);
+    void SaveTrajectoryKITTI(const std::string &filename);
 
     // TODO: Save/Load functions
     // SaveMap(const string &filename);

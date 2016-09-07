@@ -52,7 +52,7 @@ class Tracking
 {  
 
 public:
-    Tracking(System* pSys, ORBVocabulary* pVoc, Map* pMap,
+    Tracking(System* pSys, ORBVocabulary* pVoc, robo_utils::Visualization& viz, robo_utils::Camera::Visualization& camViz,Map* pMap,
              KeyFrameDatabase* pKFDB, const string &strSettingPath, const int sensor);
 
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
@@ -62,7 +62,6 @@ public:
 
     void SetLocalMapper(LocalMapping* pLocalMapper);
     void SetLoopClosing(LoopClosing* pLoopClosing);
-    void SetViewer(Viewer* pViewer);
 
     // Load new settings
     // The focal lenght should be similar or scale prediction will fail when projecting points
@@ -109,7 +108,7 @@ public:
     list<bool> mlbLost;
 
     // True if local mapping is deactivated and we are performing only localization
-    bool mbOnlyTracking;
+    bool mbOnlyTracking = false;
 
     void Reset();
 
@@ -207,6 +206,11 @@ protected:
     bool mbRGB;
 
     list<MapPoint*> mlpTemporalPoints;
+
+    //VIZ
+    void DrawPath(const cv::Mat& mat);
+    robo_utils::Visualization& visualization_;
+    robo_utils::Camera::Visualization& camVisualization_;
 };
 
 } //namespace ORB_SLAM

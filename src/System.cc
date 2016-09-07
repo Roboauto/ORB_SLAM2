@@ -19,8 +19,15 @@
 */
 
 
-
 #include "System.h"
+
+#include "Tracking.h"
+#include "Map.h"
+#include "LocalMapping.h"
+#include "LoopClosing.h"
+#include "KeyFrameDatabase.h"
+
+
 #include "Converter.h"
 #include <thread>
 #include <iomanip>
@@ -29,6 +36,7 @@ namespace ORB_SLAM2
 {
 
 System::System(const string &strVocFile, const string &strSettingsFile, const eSensor sensor,
+               robo_utils::Visualization& viz, robo_utils::Camera::Visualization& camViz,
                const bool bUseViewer):mSensor(sensor),mbReset(false),mbActivateLocalizationMode(false),
         mbDeactivateLocalizationMode(false)
 {
@@ -84,7 +92,7 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     //Initialize the Tracking thread
     //(it will live in the main thread of execution, the one that called this constructor)
-    mpTracker = new Tracking(this, mpVocabulary, /*mpFrameDrawer, mpMapDrawer,*/
+    mpTracker = new Tracking(this, mpVocabulary, viz, camViz,
                              mpMap, mpKeyFrameDatabase, strSettingsFile, mSensor);
 
     //Initialize the Local Mapping thread and launch
