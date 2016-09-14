@@ -191,7 +191,7 @@ cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRe
 
     mCurrentFrame = Frame(mImGray,imGrayRight,timestamp,mpORBextractorLeft,mpORBextractorRight,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
-    Track();
+    Track(0.0);
 
     return mCurrentFrame.mTcw.clone();
 }
@@ -222,15 +222,12 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
 
     mCurrentFrame = Frame(mImGray,imDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
-    Track();
+    Track(0.0);
 
     return mCurrentFrame.mTcw.clone();
 }
 
-    int lowT = 60;
-    int highT = 180;
-
-cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
+cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, const double odoDistance)
 {
     /*
 cvNamedWindow("cnt",CV_WINDOW_AUTOSIZE);
@@ -282,8 +279,6 @@ im.copyTo(mImGray,255 - mask(myROI));
       */
 
     mImGray = im(cv::Rect(0, 0, im.cols, nearbyintf(0.65 * im.rows)));
-
-
     if(mImGray.channels()==3)
     {
         if(mbRGB)
@@ -304,12 +299,12 @@ im.copyTo(mImGray,255 - mask(myROI));
     else
         mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
-    Track();
+    Track(odoDistance);
 
     return mCurrentFrame.mTcw.clone();
 }
 
-void Tracking::Track()
+void Tracking::Track(const double odoDistance)
 {
     if(mState==NO_IMAGES_YET)
     {
@@ -326,7 +321,7 @@ void Tracking::Track()
         if(mSensor==System::STEREO || mSensor==System::RGBD)
             StereoInitialization();
         else
-            MonocularInitialization();
+            MonocularInitialization(odoDistance);
 
         //mpFrameDrawer->Update(this);
         cv::Mat img;
@@ -622,7 +617,7 @@ void Tracking::StereoInitialization()
     }
 }
 
-void Tracking::MonocularInitialization()
+void Tracking::MonocularInitialization(const double odoDistance)
 {
 
     if(!mpInitializer)
@@ -697,14 +692,14 @@ void Tracking::MonocularInitialization()
             tcw.copyTo(Tcw.rowRange(0,3).col(3));
             mCurrentFrame.SetPose(Tcw);
 
-            CreateInitialMapMonocular();
+            CreateInitialMapMonocular(odoDistance);
 
             std::cout << "mono initialized" << std::endl;
         }
     }
 }
 
-void Tracking::CreateInitialMapMonocular()
+void Tracking::CreateInitialMapMonocular(const double odoDistance)
 {
     // Create KeyFrames
     KeyFrame* pKFini = new KeyFrame(mInitialFrame,mpMap,mpKeyFrameDB);
@@ -766,21 +761,14 @@ void Tracking::CreateInitialMapMonocular()
         return;
     }
 
-    // Scale initial baseline
-    cv::Mat Tc2w = pKFcur->GetPose();
-    Tc2w.col(3).rowRange(0,3) = Tc2w.col(3).rowRange(0,3)*invMedianDepth;
-    pKFcur->SetPose(Tc2w);
+    ScaleInitialKeyFrames(pKFini,pKFcur,invMedianDepth);
 
-    // Scale points
-    vector<MapPoint*> vpAllMapPoints = pKFini->GetMapPointMatches();
-    for(size_t iMP=0; iMP<vpAllMapPoints.size(); iMP++)
-    {
-        if(vpAllMapPoints[iMP])
-        {
-            MapPoint* pMP = vpAllMapPoints[iMP];
-            pMP->SetWorldPos(pMP->GetWorldPos()*invMedianDepth);
-        }
-    }
+    //compute distance and scale
+    double kfdist = cv::norm(pKFcur->GetTranslation(), pKFini->GetTranslation());
+
+    std::cout << "keyframe distance: " << kfdist << " ododistance " << odoDistance << std::endl;
+
+    ScaleInitialKeyFrames(pKFini,pKFcur,odoDistance/kfdist);
 
     mpLocalMapper->InsertKeyFrame(pKFini);
     mpLocalMapper->InsertKeyFrame(pKFcur);
@@ -804,6 +792,25 @@ void Tracking::CreateInitialMapMonocular()
     mpMap->mvpKeyFrameOrigins.push_back(pKFini);
 
     mState=OK;
+}
+
+void Tracking::ScaleInitialKeyFrames(KeyFrame* pKFini, KeyFrame* pKFcur, double coef)
+{
+    // Scale initial baseline
+    cv::Mat Tc2w = pKFcur->GetPose();
+    Tc2w.col(3).rowRange(0,3) = Tc2w.col(3).rowRange(0,3)*coef;
+    pKFcur->SetPose(Tc2w);
+
+    // Scale points
+    vector<MapPoint*> vpAllMapPoints = pKFini->GetMapPointMatches();
+    for(size_t iMP=0; iMP<vpAllMapPoints.size(); iMP++)
+    {
+        if(vpAllMapPoints[iMP])
+        {
+            MapPoint* pMP = vpAllMapPoints[iMP];
+            pMP->SetWorldPos(pMP->GetWorldPos()*coef);
+        }
+    }
 }
 
 void Tracking::CheckReplacedInLastFrame()
@@ -1627,6 +1634,8 @@ void Tracking::Reset()
     mlFrameTimes.clear();
     mlbLost.clear();
 
+    visualization_.Reset();
+
     //mpViewer->Release();
 }
 
@@ -1673,15 +1682,19 @@ void Tracking::InformOnlyTracking(const bool &flag)
         const cv::Mat Rcw = mat.rowRange(0,3).colRange(0,3);
         const cv::Mat tcw = mat.rowRange(0,3).col(3);
 
-        tf2::Transform transform;
 
-        tf2::Vector3 T(tcw.at<float>(0), tcw.at<float>(1),tcw.at<float>(2));
+        tf2::Vector3 T(-tcw.at<float>(2), -tcw.at<float>(0),tcw.at<float>(1));
         tf2::Matrix3x3 R(Rcw.at<float>(0,0),Rcw.at<float>(0,1),Rcw.at<float>(0,2),
                          Rcw.at<float>(1,0),Rcw.at<float>(1,1),Rcw.at<float>(1,2),
                          Rcw.at<float>(2,0),Rcw.at<float>(2,1),Rcw.at<float>(2,2));
-        transform = tf2::Transform(R,T);
 
-        visualization_.DrawPath(transform, ros::Time::now());
+        double roll, pitch, yaw;
+        R.getRPY(roll,pitch,yaw);
+
+        tf2::Quaternion q;
+        q.setRPY(pitch, roll, yaw);
+
+        visualization_.DrawPath(tf2::Transform(q,T), ros::Time::now());
     }
 
 } //namespace ORB_SLAM

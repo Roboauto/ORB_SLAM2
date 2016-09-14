@@ -58,7 +58,7 @@ public:
     // Preprocess the input and call Track(). Extract features and performs stereo matching.
     cv::Mat GrabImageStereo(const cv::Mat &imRectLeft,const cv::Mat &imRectRight, const double &timestamp);
     cv::Mat GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const double &timestamp);
-    cv::Mat GrabImageMonocular(const cv::Mat &im, const double &timestamp);
+    cv::Mat GrabImageMonocular(const cv::Mat &im, const double &timestamp, const double odoDistance);
 
     void SetLocalMapper(LocalMapping* pLocalMapper);
     void SetLoopClosing(LoopClosing* pLoopClosing);
@@ -70,7 +70,6 @@ public:
 
     // Use this function if you have deactivated local mapping and you only want to localize the camera.
     void InformOnlyTracking(const bool &flag);
-
 
 public:
 
@@ -92,6 +91,8 @@ public:
     // Current Frame
     Frame mCurrentFrame;
     cv::Mat mImGray;
+
+    void ScaleInitialKeyFrames(KeyFrame* pKFini, KeyFrame* pKFcur,double coef);
 
     // Initialization Variables (Monocular)
     std::vector<int> mvIniLastMatches;
@@ -115,14 +116,14 @@ public:
 protected:
 
     // Main tracking function. It is independent of the input sensor.
-    void Track();
+    void Track(const double odoDistance);
 
     // Map initialization for stereo and RGB-D
     void StereoInitialization();
 
     // Map initialization for monocular
-    void MonocularInitialization();
-    void CreateInitialMapMonocular();
+    void MonocularInitialization(const double odoDistance);
+    void CreateInitialMapMonocular(const double odoDistance);
 
     void CheckReplacedInLastFrame();
     bool TrackReferenceKeyFrame();

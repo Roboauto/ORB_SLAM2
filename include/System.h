@@ -74,7 +74,7 @@ public:
     // Proccess the given monocular frame
     // Input images: RGB (CV_8UC3) or grayscale (CV_8U). RGB is converted to grayscale.
     // Returns the camera pose (empty if tracking fails).
-    cv::Mat TrackMonocular(const cv::Mat &im, const double &timestamp);
+    cv::Mat TrackMonocular(const cv::Mat &im, const double &timestamp, const double odoDistance);
 
     // This stops local mapping thread (map building) and performs only camera tracking.
     void ActivateLocalizationMode();
@@ -108,6 +108,8 @@ public:
     // TODO: Save/Load functions
     // SaveMap(const string &filename);
     // LoadMap(const string &filename);
+
+    Tracking* getTracking() {return mpTracker;}
 
 private:
 
