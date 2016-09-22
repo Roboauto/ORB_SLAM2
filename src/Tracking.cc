@@ -483,13 +483,6 @@ void Tracking::Track(const double odoDistance)
             else
                 mVelocity = cv::Mat();
 
-            visualization_.ClearPath();
-            for (KeyFrame* frame : mlpReferences)
-            {
-                DrawPath(frame->GetPose());
-            }
-            std::cout << "DRAWING PATH" << std::endl;
-
             // Clean temporal point matches
             for(int i=0; i<mCurrentFrame.N; i++)
             {
@@ -661,7 +654,7 @@ void Tracking::MonocularInitialization(const double odoDistance)
         int nmatches = matcher.SearchForInitialization(mInitialFrame,mCurrentFrame,mvbPrevMatched,mvIniMatches,100);
 
         // Check if there are enough correspondences
-        if(nmatches<30)
+        if(nmatches<90)
         {
             std::cout << "not enough matches: " << nmatches << std::endl;
 

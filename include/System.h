@@ -111,6 +111,8 @@ public:
 
     Tracking* getTracking() {return mpTracker;}
 
+    Map* getMap() {return mpMap;}
+
 private:
 
     // Input sensor
