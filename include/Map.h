@@ -27,7 +27,8 @@
 
 #include <mutex>
 
-
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/set.hpp>
 
 namespace ORB_SLAM2
 {
@@ -38,6 +39,7 @@ class KeyFrame;
 class Map
 {
 public:
+
     Map();
 
     void AddKeyFrame(KeyFrame* pKF);
@@ -57,7 +59,9 @@ public:
 
     void clear();
 
-    vector<KeyFrame*> mvpKeyFrameOrigins;
+    bool equals(Map* other);
+
+    std::vector<KeyFrame*> mvpKeyFrameOrigins;
 
     std::mutex mMutexMapUpdate;
 
@@ -73,6 +77,20 @@ protected:
     long unsigned int mnMaxKFid;
 
     std::mutex mMutexMap;
+
+private:
+    // Boost serialization
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & mvpKeyFrameOrigins;
+
+        ar & mspMapPoints;
+        ar & mspKeyFrames;
+        ar & mnMaxKFid;
+    }
 };
 
 } //namespace ORB_SLAM

@@ -23,6 +23,9 @@
 #define SYSTEM_H
 
 #include "ORBVocabulary.h"
+#include "MapPoint.h"
+#include "KeyFrame.h"
+#include "Map.h"
 
 #include <robo_utils/Visualization.hh>
 #include <robo_utils/Camera/Visualization.hh>
@@ -105,13 +108,16 @@ public:
     // See format details at: http://www.cvlibs.net/datasets/kitti/eval_odometry.php
     void SaveTrajectoryKITTI(const std::string &filename);
 
-    // TODO: Save/Load functions
-    // SaveMap(const string &filename);
-    // LoadMap(const string &filename);
-
     Tracking* getTracking() {return mpTracker;}
 
     Map* getMap() {return mpMap;}
+
+    //boost serialization
+    void SaveIntoBoost(const std::string &filename);
+    void LoadFromBoostTesting(const std::string &filename);
+    void LoadFromBoost(const std::string &filename);
+
+    void SerializationTester();
 
 private:
 
@@ -123,9 +129,11 @@ private:
 
     // KeyFrame database for place recognition (relocalization and loop detection).
     KeyFrameDatabase* mpKeyFrameDatabase;
+    KeyFrameDatabase* mpKeyFrameDatabase2; //for testing purposes
 
     // Map structure that stores the pointers to all KeyFrames and MapPoints.
     Map* mpMap;
+    Map* mpMap2; //for testing purposes
 
     // Tracker. It receives a frame and computes the associated camera pose.
     // It also decides when to insert a new keyframe, create some new MapPoints and
@@ -145,6 +153,8 @@ private:
     std::thread* mptLoopClosing;
     std::thread* mptViewer;
 
+    std::thread* serializationTester; //BOOST serialization testing
+
     // Reset flag
     std::mutex mMutexReset;
     bool mbReset;
@@ -158,3 +168,4 @@ private:
 }// namespace ORB_SLAM
 
 #endif // SYSTEM_H
+

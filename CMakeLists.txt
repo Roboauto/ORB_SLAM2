@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(Boost 1.55 REQUIRED system serialization) # system serialization
 
 catkin_package(
         INCLUDE_DIRS include ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2 ${PROJECT_SOURCE_DIR}/Thirdparty/g2o
@@ -35,6 +36,7 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
         ${roscpp_INCLUDE_DIRS}
         ${EIGEN3_INCLUDE_DIR}
+        ${Boost_INCLUDE_DIRS}
         ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2
         ${PROJECT_SOURCE_DIR}/Thirdparty/g2o
@@ -66,7 +68,7 @@ src/Frame.cc
 src/KeyFrameDatabase.cc
 src/Sim3Solver.cc
 src/Initializer.cc
-)
+        include/CVSerializationHelper.h src/SerializationTester.cpp include/SerializationTester.h)
 
 target_link_libraries(orb_slam2
         ${catkin_LIBRARIES}
@@ -74,6 +76,7 @@ target_link_libraries(orb_slam2
         ${roslib_LIBRARIES}
         ${OpenCV_LIBS}
         ${EIGEN3_LIBS}
+        ${Boost_LIBRARIES}
         DBoW2
         g2o
 )

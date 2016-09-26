@@ -22,6 +22,11 @@
 #include "Converter.h"
 #include "ORBmatcher.h"
 #include<mutex>
+#include "CVSerializationHelper.h"
+
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/set.hpp>
+#include <SerializationTester.h>
 
 namespace ORB_SLAM2
 {
@@ -55,6 +60,19 @@ KeyFrame::KeyFrame(Frame &F, Map *pMap, KeyFrameDatabase *pKFDB):
 
     SetPose(F.mTcw);    
 }
+
+//DO NOT USE. ONLY FOR BOOST SERIALIZATION
+KeyFrame::KeyFrame():
+    mnFrameId(0),  mTimeStamp(0), mnGridCols(0), mnGridRows(0),
+    mfGridElementWidthInv(0), mfGridElementHeightInv(0),
+    fx(0), fy(0), cx(0), cy(0), invfx(0), invfy(0), mbf(0), mb(0), mThDepth(0), N(0),
+    mvKeys(0), mvKeysUn(0), mvuRight(0), mvDepth(0),
+    mnScaleLevels(0), mfScaleFactor(0), mfLogScaleFactor(0), mvScaleFactors(0), mvLevelSigma2(0),
+    mvInvLevelSigma2(0), mnMinX(0), mnMinY(0), mnMaxX(0), mnMaxY(0)
+{
+
+}
+
 
 void KeyFrame::ComputeBoW()
 {
@@ -660,6 +678,41 @@ float KeyFrame::ComputeSceneMedianDepth(const int q)
     sort(vDepths.begin(),vDepths.end());
 
     return vDepths[(vDepths.size()-1)/q];
+}
+
+bool KeyFrame::equals(KeyFrame *other) {
+    if (mnId != other->mnId) {
+        return false;
+    }
+    if (mnFrameId != other->mnFrameId) {
+        return false;
+    }
+    if (mTimeStamp != other->mTimeStamp) {
+        return false;
+    }
+    if (mLoopScore != other->mLoopScore) {
+        return false;
+    }
+
+    if (!SerializationTester::matEquals(mTcwGBA, other->mTcwGBA)) {
+        return false;
+    }
+
+    if (mvKeys.size() != other->mvKeys.size()) {
+        return false;
+    } else {
+        for (unsigned int i = 0; i < mvKeys.size(); i++) {
+            if (mvKeys[i].pt.x != other->mvKeys[i].pt.x || mvKeys[i].pt.y != other->mvKeys[i].pt.y) {
+                return false;
+            }
+        }
+    }
+
+    if (!SerializationTester::matEquals(mTcp, other->mTcp)){
+        return false;
+    }
+
+    return true;
 }
 
 } //namespace ORB_SLAM

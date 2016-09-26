@@ -32,6 +32,9 @@
 #include <thread>
 #include <iomanip>
 
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+
 namespace ORB_SLAM2
 {
 
@@ -103,6 +106,8 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
     mpLoopCloser = new LoopClosing(mpMap, mpKeyFrameDatabase, mpVocabulary, mSensor!=MONOCULAR);
     mptLoopClosing = new thread(&ORB_SLAM2::LoopClosing::Run, mpLoopCloser);
 
+    //serializationTester = new thread(&System::SerializationTester, this); //SERIALIZATION TESTING
+
     //Initialize the Viewer thread and launch
     /*mpViewer = new Viewer(this, mpFrameDrawer,mpMapDrawer,mpTracker,strSettingsFile);
     if(bUseViewer)
@@ -119,6 +124,22 @@ System::System(const string &strVocFile, const string &strSettingsFile, const eS
 
     mpLoopCloser->SetTracker(mpTracker);
     mpLoopCloser->SetLocalMapper(mpLocalMapper);
+}
+
+void System::SerializationTester() {
+    while (mpMap->GetAllKeyFrames().size() < 5 || mpMap->GetAllMapPoints().size() < 5) {
+        usleep(100);
+    }
+    //enough data to test save
+    Shutdown();
+    SaveIntoBoost("/home/robo/fonadius/pokus.data");
+    LoadFromBoostTesting("/home/robo/fonadius/pokus.data");
+
+    if (mpMap->equals(mpMap2)) {
+        cout << "Serialized data are equal" << endl;
+    } else {
+        cout << "Problem with serialized data" << endl;
+    }
 }
 
 cv::Mat System::TrackStereo(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp)
@@ -426,6 +447,30 @@ void System::SaveTrajectoryKITTI(const string &filename)
     }
     f.close();
     cout << endl << "trajectory saved!" << endl;
+}
+
+void System::SaveIntoBoost(const std::string &filename) {
+    std::ofstream ofs(filename);
+    boost::archive::binary_oarchive oa(ofs);
+
+    oa << mpMap;
+    oa << mpKeyFrameDatabase;
+}
+
+void System::LoadFromBoostTesting(const std::string &filename) {
+    std::ifstream ifs(filename);
+    boost::archive::binary_iarchive ia(ifs);
+
+    ia >> mpMap2;
+    ia >> mpKeyFrameDatabase2;
+}
+
+void System::LoadFromBoost(const std::string &filename) {
+    std::ifstream ifs(filename);
+    boost::archive::binary_iarchive ia(ifs);
+
+    ia >> mpMap;
+    ia >> mpKeyFrameDatabase;
 }
 
 } //namespace ORB_SLAM

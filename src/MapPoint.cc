@@ -20,6 +20,7 @@
 
 #include "MapPoint.h"
 #include "ORBmatcher.h"
+#include "SerializationTester.h"
 
 #include<mutex>
 
@@ -69,6 +70,13 @@ MapPoint::MapPoint(const cv::Mat &Pos, Map* pMap, Frame* pFrame, const int &idxF
     unique_lock<mutex> lock(mpMap->mMutexPointCreation);
     mnId=nNextId++;
 }
+
+//DO NOT USE. ONLY FOR BOOST SERIALIZATION
+MapPoint::MapPoint():
+    mnFirstKFid(0), mnFirstFrame(0), nObs(0), mnTrackReferenceForFrame(0),
+    mnLastFrameSeen(0), mnBALocalForKF(0), mnFuseCandidateForKF(0), mnLoopPointForKF(0), mnCorrectedByKF(0),
+    mnCorrectedReference(0), mnBAGlobalForKF(0), mpRefKF(NULL), mnVisible(0), mnFound(0), mbBad(false),
+    mpReplaced(static_cast<MapPoint*>(NULL)), mfMinDistance(0), mfMaxDistance(0), mpMap(NULL) {}
 
 void MapPoint::SetWorldPos(const cv::Mat &Pos)
 {
@@ -391,6 +399,71 @@ int MapPoint::PredictScale(const float &currentDist, const float &logScaleFactor
     }
 
     return ceil(log(ratio)/logScaleFactor);
+}
+
+bool MapPoint::equals(MapPoint *other) {
+    if (mnId != other->mnId) {
+        return false;
+    }
+    if (mnFirstKFid != other->mnFirstKFid) {
+        return false;
+    }
+    if (mnFirstFrame != other->mnFirstFrame) {
+        return false;
+    }
+    if (nObs != other->nObs) {
+        return false;
+    }
+    if (!SerializationTester::realNumberEquals(mTrackProjX, other->mTrackProjX)) {
+        return false;
+    }
+    if (!SerializationTester::realNumberEquals(mTrackProjY, other->mTrackProjY)) {
+        return false;
+    }
+    if (!SerializationTester::realNumberEquals(mTrackProjXR, other->mTrackProjXR)) {
+        return false;
+    }
+    if (mbTrackInView != other->mbTrackInView) {
+        return false;
+    }
+    if (mnTrackScaleLevel != other->mnTrackScaleLevel) {
+        return false;
+    }
+    if (!SerializationTester::realNumberEquals(mTrackViewCos, other->mTrackViewCos)) {
+        return false;
+    }
+    if (mnTrackReferenceForFrame != other->mnTrackReferenceForFrame) {
+        return false;
+    }
+    if (mnLastFrameSeen != other->mnLastFrameSeen) {
+        return false;
+    }
+    if (mnBALocalForKF != other->mnBALocalForKF) {
+        return false;
+    }
+    if (mnFuseCandidateForKF != other->mnFuseCandidateForKF) {
+        return false;
+    }
+    if (mnLoopPointForKF != other->mnLoopPointForKF) {
+        return false;
+    }
+    if (mnCorrectedByKF != other->mnCorrectedByKF) {
+        return false;
+    }
+    if (mnCorrectedReference != other->mnCorrectedReference) {
+        return false;
+    }
+    if (!SerializationTester::matEquals(mPosGBA, other->mPosGBA)) {
+        return false;
+    }
+    if (mnBAGlobalForKF != other->mnBAGlobalForKF) {
+        return false;
+    }
+
+    if (!SerializationTester::realNumberEquals(mfMinDistance, other->mfMinDistance)) {
+        return false;
+    }
+    return true;
 }
 
 } //namespace ORB_SLAM

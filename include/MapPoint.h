@@ -24,8 +24,10 @@
 #include"KeyFrame.h"
 #include"Frame.h"
 #include"Map.h"
+#include "CVSerializationHelper.h"
 
 #include<opencv2/core/core.hpp>
+#include <boost/serialization/map.hpp>
 #include<mutex>
 
 namespace ORB_SLAM2
@@ -41,6 +43,7 @@ class MapPoint
 public:
     MapPoint(const cv::Mat &Pos, KeyFrame* pRefKF, Map* pMap);
     MapPoint(const cv::Mat &Pos,  Map* pMap, Frame* pFrame, const int &idxF);
+    MapPoint();
 
     void SetWorldPos(const cv::Mat &Pos);
     cv::Mat GetWorldPos();
@@ -79,6 +82,8 @@ public:
     float GetMinDistanceInvariance();
     float GetMaxDistanceInvariance();
     int PredictScale(const float &currentDist, const float &logScaleFactor);
+
+    bool equals(MapPoint* other);
 
 public:
     long unsigned int mnId;
@@ -144,6 +149,50 @@ protected:
 
      std::mutex mMutexPos;
      std::mutex mMutexFeatures;
+private:
+    // Boost serialization
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & mnId;
+        ar & nNextId;
+        ar & mnFirstKFid;
+        ar & mnFirstFrame;
+        ar & nObs;
+
+        ar & mTrackProjX;
+        ar & mTrackProjY;
+        ar & mTrackProjXR;
+        ar & mbTrackInView;
+        ar & mnTrackScaleLevel;
+        ar & mTrackViewCos;
+        ar & mnTrackReferenceForFrame;
+        ar & mnLastFrameSeen;
+
+        ar & mnBALocalForKF;
+        ar & mnFuseCandidateForKF;
+
+        ar & mnLoopPointForKF;
+        ar & mnCorrectedByKF;
+        ar & mnCorrectedReference;
+        ar & mPosGBA;
+        ar & mnBAGlobalForKF;
+
+        ar & mWorldPos;
+        ar & mObservations;
+        ar & mNormalVector;
+        ar & mDescriptor;
+        ar & mpRefKF;
+        ar & mnVisible;
+        ar & mnFound;
+        ar & mbBad;
+        ar & mpReplaced;
+        ar & mfMinDistance;
+        ar & mfMaxDistance;
+        ar & mpMap;
+    }
 };
 
 } //namespace ORB_SLAM

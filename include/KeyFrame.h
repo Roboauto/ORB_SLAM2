@@ -30,6 +30,9 @@
 #include "KeyFrameDatabase.h"
 
 #include <mutex>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/set.hpp>
+#include <boost/serialization/map.hpp>
 
 
 namespace ORB_SLAM2
@@ -44,6 +47,9 @@ class KeyFrame
 {
 public:
     KeyFrame(Frame &F, Map* pMap, KeyFrameDatabase* pKFDB);
+
+    //DO NOT USE. ONLY FOR BOOST SERIALIZATION
+    KeyFrame();
 
     // Pose functions
     void SetPose(const cv::Mat &Tcw);
@@ -115,6 +121,8 @@ public:
     static bool lId(KeyFrame* pKF1, KeyFrame* pKF2){
         return pKF1->mnId<pKF2->mnId;
     }
+
+    bool equals(KeyFrame* other);
 
 
     // The following variables are accesed from only 1 thread or never change (no mutex needed).
@@ -231,6 +239,107 @@ protected:
     std::mutex mMutexPose;
     std::mutex mMutexConnections;
     std::mutex mMutexFeatures;
+
+private:
+    // Boost serialization
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & nNextId;
+        ar & mnId;
+        ar & const_cast<long unsigned int &>(mnFrameId);
+        ar & const_cast<double &>(mTimeStamp);
+
+        ar & const_cast<int &>(mnGridCols);
+        ar & const_cast<int &>(mnGridRows);
+        ar & const_cast<float &>(mfGridElementWidthInv);
+        ar & const_cast<float &>(mfGridElementHeightInv);
+
+        ar & mnTrackReferenceForFrame;
+        ar & mnFuseTargetForKF;
+
+        ar & mnBALocalForKF;
+        ar & mnBAFixedForKF;
+
+        ar & mnLoopQuery;
+        ar & mnLoopWords;
+        ar & mLoopScore;
+        ar & mnRelocQuery;
+        ar & mnRelocWords;
+        ar & mRelocScore;
+
+        ar & mTcwGBA;
+        ar & mTcwBefGBA;
+        ar & mnBAGlobalForKF;
+
+        ar & const_cast<float &>(fx);
+        ar & const_cast<float &>(fy);
+        ar & const_cast<float &>(cx);
+        ar & const_cast<float &>(cy);
+        ar & const_cast<float &>(invfx);
+        ar & const_cast<float &>(invfy);
+        ar & const_cast<float &>(mbf);
+        ar & const_cast<float &>(mb);
+        ar & const_cast<float &>(mThDepth);
+
+        ar & const_cast<int &>(N);
+
+        ar & const_cast<std::vector<cv::KeyPoint> &>(mvKeys);
+        ar & const_cast<std::vector<cv::KeyPoint> &>(mvKeysUn);
+        ar & const_cast<std::vector<float> &>(mvuRight);
+        ar & const_cast<std::vector<float> &>(mvDepth);
+        ar & const_cast<cv::Mat &>(mDescriptors);
+
+        //ar & mBowVec; //TODO: is not serialized in git version //serializable??
+        //ar & mFeatVec; //TODO: is not serialized in git version //serializable??
+
+        ar & mTcp;
+
+        ar & const_cast<int &>(mnScaleLevels);
+        ar & const_cast<float &>(mfScaleFactor);
+        ar & const_cast<float &>(mfLogScaleFactor);
+        ar & const_cast<std::vector<float> &>(mvScaleFactors);
+        ar & const_cast<std::vector<float> &>(mvLevelSigma2);
+        ar & const_cast<std::vector<float> &>(mvInvLevelSigma2);
+
+        ar & const_cast<int &>(mnMinX);
+        ar & const_cast<int &>(mnMinY);
+        ar & const_cast<int &>(mnMaxX);
+        ar & const_cast<int &>(mnMaxY);
+        ar & const_cast<cv::Mat &>(mK);
+
+        ar & Tcw;
+        ar & Twc;
+        ar & Ow;
+
+        ar & Cw;
+
+        ar & mvpMapPoints;
+
+        //ar & mpKeyFrameDB; //TODO: is not serialized in git version //Probably not necessary here
+        //ar & mpORBvocabulary; //TODO: is not serialized in git version //Probably not necessary here???
+
+        ar & mGrid;
+
+        ar & mConnectedKeyFrameWeights;
+        ar & mvpOrderedConnectedKeyFrames;
+        ar & mvOrderedWeights;
+
+        ar & mbFirstConnection;
+        ar & mpParent;
+        ar & mspChildrens;
+        ar & mspLoopEdges;
+
+        ar & mbNotErase;
+        ar & mbToBeErased;
+        ar & mbBad;
+
+        ar & mHalfBaseline;
+
+        ar & mpMap;
+    }
 };
 
 } //namespace ORB_SLAM

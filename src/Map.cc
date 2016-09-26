@@ -21,6 +21,7 @@
 #include "Map.h"
 
 #include<mutex>
+#include<iostream>
 
 namespace ORB_SLAM2
 {
@@ -116,6 +117,57 @@ void Map::clear()
     mnMaxKFid = 0;
     mvpReferenceMapPoints.clear();
     mvpKeyFrameOrigins.clear();
+}
+
+bool Map::equals(Map *other) {
+    if (mvpKeyFrameOrigins.size() != other->mvpKeyFrameOrigins.size()) {
+        return false;
+    } else {
+        for (unsigned int i = 0; i < mvpKeyFrameOrigins.size(); i++) {
+            if (mvpKeyFrameOrigins[i]->equals(other->mvpKeyFrameOrigins[i]) == false) {
+                return false;
+            }
+        }
+    }
+
+    if (mspMapPoints.size() != other->mspMapPoints.size()) {
+        return false;
+    } else {
+        for (std::set<MapPoint*>::iterator itOther=other->mspMapPoints.begin(); itOther != other->mspMapPoints.end(); itOther++) {
+            bool found = false;
+            for (std::set<MapPoint *>::iterator it = mspMapPoints.begin(); it != mspMapPoints.end(); it++) {
+                if ((*it)->equals((*itOther))) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+    }
+
+    if (mspKeyFrames.size() != other->mspKeyFrames.size()) {
+        return false;
+    } else {
+        for (std::set<KeyFrame*>::iterator itOther=other->mspKeyFrames.begin(); itOther != other->mspKeyFrames.end(); itOther++) {
+            bool found = false;
+            for (std::set<KeyFrame *>::iterator it = mspKeyFrames.begin(); it != mspKeyFrames.end(); it++) {
+                if ((*it)->equals((*itOther))) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                return false;
+            }
+        }
+    }
+
+    if (mnMaxKFid != other->mnMaxKFid) {
+        return false;
+    }
+    return true;
 }
 
 } //namespace ORB_SLAM

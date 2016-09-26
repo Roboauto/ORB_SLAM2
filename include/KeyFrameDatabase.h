@@ -31,6 +31,9 @@
 
 #include<mutex>
 
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/list.hpp>
+
 
 namespace ORB_SLAM2
 {
@@ -44,8 +47,11 @@ class KeyFrameDatabase
 public:
 
     KeyFrameDatabase(const ORBVocabulary &voc);
+    KeyFrameDatabase() {};
 
    void add(KeyFrame* pKF);
+
+   void setVocabulary(ORBVocabulary *voc);
 
    void erase(KeyFrame* pKF);
 
@@ -63,10 +69,20 @@ protected:
   const ORBVocabulary* mpVoc;
 
   // Inverted file
-  std::vector<list<KeyFrame*> > mvInvertedFile;
+  std::vector<std::list<KeyFrame*> > mvInvertedFile;
 
   // Mutex
   std::mutex mMutex;
+
+private:
+    //boost serialization
+    friend class boost::serialization::access;
+
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+//        ar & mpVoc; //TODO: not necessary??
+        ar & mvInvertedFile;
+    }
 };
 
 } //namespace ORB_SLAM
