@@ -61,6 +61,8 @@ public:
 
     bool equals(Map* other);
 
+    void SetVocabularyForAll(ORBVocabulary *voc);
+
     std::vector<KeyFrame*> mvpKeyFrameOrigins;
 
     std::mutex mMutexMapUpdate;

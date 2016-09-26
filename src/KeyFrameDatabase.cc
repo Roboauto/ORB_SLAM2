@@ -308,4 +308,8 @@ vector<KeyFrame*> KeyFrameDatabase::DetectRelocalizationCandidates(Frame *F)
     return vpRelocCandidates;
 }
 
+void KeyFrameDatabase::setVocabulary(ORBVocabulary *voc) {
+    mpVoc = voc;
+}
+
 } //namespace ORB_SLAM

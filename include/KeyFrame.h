@@ -124,6 +124,8 @@ public:
 
     bool equals(KeyFrame* other);
 
+    void SetVocabulary(ORBVocabulary *voc);
+
 
     // The following variables are accesed from only 1 thread or never change (no mutex needed).
 public:

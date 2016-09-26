@@ -715,4 +715,8 @@ bool KeyFrame::equals(KeyFrame *other) {
     return true;
 }
 
+void KeyFrame::SetVocabulary(ORBVocabulary *voc) {
+    mpORBvocabulary = voc;
+}
+
 } //namespace ORB_SLAM

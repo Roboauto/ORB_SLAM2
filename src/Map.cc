@@ -170,4 +170,10 @@ bool Map::equals(Map *other) {
     return true;
 }
 
+void Map::SetVocabularyForAll(ORBVocabulary *voc) {
+    for (KeyFrame* k : mspKeyFrames) {
+        k->SetVocabulary(voc);
+    }
+}
+
 } //namespace ORB_SLAM

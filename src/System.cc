@@ -471,6 +471,9 @@ void System::LoadFromBoost(const std::string &filename) {
 
     ia >> mpMap;
     ia >> mpKeyFrameDatabase;
+
+    mpKeyFrameDatabase->setVocabulary(mpVocabulary);
+    mpMap->SetVocabularyForAll(mpVocabulary);
 }
 
 } //namespace ORB_SLAM
