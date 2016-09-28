@@ -463,6 +463,9 @@ void System::LoadFromBoostTesting(const std::string &filename) {
 
     ia >> mpMap2;
     ia >> mpKeyFrameDatabase2;
+
+    mpKeyFrameDatabase2->setVocabulary(mpVocabulary);
+    mpMap2->SetVocabularyForAll(mpVocabulary);
 }
 
 void System::LoadFromBoost(const std::string &filename) {
