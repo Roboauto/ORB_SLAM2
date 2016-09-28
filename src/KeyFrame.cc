@@ -66,9 +66,8 @@ KeyFrame::KeyFrame():
     mnFrameId(0),  mTimeStamp(0), mnGridCols(0), mnGridRows(0),
     mfGridElementWidthInv(0), mfGridElementHeightInv(0),
     fx(0), fy(0), cx(0), cy(0), invfx(0), invfy(0), mbf(0), mb(0), mThDepth(0), N(0),
-    mvKeys(0), mvKeysUn(0), mvuRight(0), mvDepth(0),
-    mnScaleLevels(0), mfScaleFactor(0), mfLogScaleFactor(0), mvScaleFactors(0), mvLevelSigma2(0),
-    mvInvLevelSigma2(0), mnMinX(0), mnMinY(0), mnMaxX(0), mnMaxY(0)
+    mnScaleLevels(0), mfScaleFactor(0), mfLogScaleFactor(0),
+    mnMinX(0), mnMinY(0), mnMaxX(0), mnMaxY(0)
 {
 
 }
@@ -717,6 +716,10 @@ bool KeyFrame::equals(KeyFrame *other) {
 
 void KeyFrame::SetVocabulary(ORBVocabulary *voc) {
     mpORBvocabulary = voc;
+}
+
+const ORBVocabulary* KeyFrame::GetVocabulary() const {
+    return mpORBvocabulary;
 }
 
 } //namespace ORB_SLAM

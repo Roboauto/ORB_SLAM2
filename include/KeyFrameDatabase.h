@@ -66,7 +66,7 @@ public:
 protected:
 
   // Associated vocabulary
-  const ORBVocabulary* mpVoc;
+  const ORBVocabulary* mpVoc = NULL;
 
   // Inverted file
   std::vector<std::list<KeyFrame*> > mvInvertedFile;

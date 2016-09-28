@@ -76,7 +76,7 @@ protected:
 
     std::vector<MapPoint*> mvpReferenceMapPoints;
 
-    long unsigned int mnMaxKFid;
+    long unsigned int mnMaxKFid = 0;
 
     std::mutex mMutexMap;
 
