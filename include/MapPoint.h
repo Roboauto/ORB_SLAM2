@@ -25,6 +25,7 @@
 #include"Frame.h"
 #include"Map.h"
 #include "CVSerializationHelper.h"
+#include "BowSerializationHelper.h"
 
 #include<opencv2/core/core.hpp>
 #include <boost/serialization/map.hpp>

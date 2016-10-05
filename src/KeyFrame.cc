@@ -23,6 +23,7 @@
 #include "ORBmatcher.h"
 #include<mutex>
 #include "CVSerializationHelper.h"
+#include "BowSerializationHelper.h"
 
 #include <boost/serialization/vector.hpp>
 #include <boost/serialization/set.hpp>

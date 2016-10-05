@@ -295,8 +295,8 @@ private:
         ar & const_cast<std::vector<float> &>(mvDepth);
         ar & const_cast<cv::Mat &>(mDescriptors);
 
-        //ar & mBowVec; //TODO: is not serialized in git version //serializable??
-        //ar & mFeatVec; //TODO: is not serialized in git version //serializable??
+        ar & mBowVec;
+        ar & mFeatVec;
 
         ar & mTcp;
 

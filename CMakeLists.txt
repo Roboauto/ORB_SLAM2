@@ -68,7 +68,7 @@ src/Frame.cc
 src/KeyFrameDatabase.cc
 src/Sim3Solver.cc
 src/Initializer.cc
-        include/CVSerializationHelper.h src/SerializationTester.cpp include/SerializationTester.h)
+        include/CVSerializationHelper.h src/SerializationTester.cpp include/SerializationTester.h include/BowSerializationHelper.h)
 
 target_link_libraries(orb_slam2
         ${catkin_LIBRARIES}
