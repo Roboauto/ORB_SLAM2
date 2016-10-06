@@ -524,7 +524,7 @@ void Tracking::Track(const double odoDistance)
             if(mpMap->KeyFramesInMap()<=5)
             {
                 cout << "Track lost soon after initialisation, reseting..." << endl;
-                mpSystem->Reset();
+                //mpSystem->Reset();
                 return;
             }
         }
@@ -547,10 +547,11 @@ void Tracking::Track(const double odoDistance)
     else
     {
         // This can happen if tracking is lost
-        mlRelativeFramePoses.push_back(mlRelativeFramePoses.back());
+        /*mlRelativeFramePoses.push_back(mlRelativeFramePoses.back());
         mlpReferences.push_back(mlpReferences.back());
         mlFrameTimes.push_back(mlFrameTimes.back());
         mlbLost.push_back(mState==LOST);
+        */
     }
 
 }
@@ -833,6 +834,11 @@ bool Tracking::TrackReferenceKeyFrame()
     // If enough matches are found we setup a PnP solver
     ORBmatcher matcher(0.7,true);
     vector<MapPoint*> vpMapPointMatches;
+
+    if (!mpReferenceKF)
+    {
+        mpReferenceKF = mpMap->GetAllKeyFrames()[0];
+    }
 
     int nmatches = matcher.SearchByBoW(mpReferenceKF,mCurrentFrame,vpMapPointMatches);
 
@@ -1668,6 +1674,11 @@ void Tracking::ChangeCalibration(const string &strSettingPath)
 void Tracking::InformOnlyTracking(const bool &flag)
 {
     mbOnlyTracking = flag;
+
+    if(flag)
+    {
+        mState = eTrackingState::LOST;
+    }
 }
 
     void Tracking::DrawPath(const cv::Mat& mat)

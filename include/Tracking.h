@@ -62,6 +62,8 @@ public:
 
     void SetLocalMapper(LocalMapping* pLocalMapper);
     void SetLoopClosing(LoopClosing* pLoopClosing);
+    void SetMap(Map* pMap) {mpMap = pMap;}
+    void SetKeyFrameDatabase(KeyFrameDatabase* pKeyFrameDB) {mpKeyFrameDB = pKeyFrameDB;}
 
     // Load new settings
     // The focal lenght should be similar or scale prediction will fail when projecting points
@@ -146,7 +148,7 @@ protected:
     // points in the map. Still tracking will continue if there are enough matches with temporal points.
     // In that case we are doing visual odometry. The system will try to do relocalization to recover
     // "zero-drift" localization to the map.
-    bool mbVO;
+    bool mbVO = true;
 
     //Other Thread Pointers
     LocalMapping* mpLocalMapper;
@@ -164,7 +166,7 @@ protected:
     Initializer* mpInitializer;
 
     //Local Map
-    KeyFrame* mpReferenceKF;
+    KeyFrame* mpReferenceKF = nullptr;
     std::vector<KeyFrame*> mvpLocalKeyFrames;
     std::vector<MapPoint*> mvpLocalMapPoints;
     

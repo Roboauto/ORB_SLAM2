@@ -155,7 +155,7 @@ public:
     long unsigned int mnLoopQuery = 0;
     int mnLoopWords = 0;
     float mLoopScore = 0;
-    long unsigned int mnRelocQuery = 0;
+    long unsigned int mnRelocQuery = -1;
     int mnRelocWords = 0;
     float mRelocScore = 0;
 

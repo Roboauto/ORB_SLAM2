@@ -475,6 +475,9 @@ void System::LoadFromBoost(const std::string &filename) {
     ia >> mpMap;
     ia >> mpKeyFrameDatabase;
 
+    mpTracker->SetMap(mpMap);
+    mpTracker->SetKeyFrameDatabase(mpKeyFrameDatabase);
+
     mpKeyFrameDatabase->setVocabulary(mpVocabulary);
     mpMap->SetVocabularyForAll(mpVocabulary);
 }
